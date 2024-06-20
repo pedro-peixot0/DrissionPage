@@ -10,6 +10,7 @@ from time import sleep, perf_counter
 from .._functions.locator import get_loc
 from .._functions.settings import Settings
 from ..errors import WaitTimeoutError, NoRectError
+from .._base.driver import Driver
 
 
 class OriginWaiter(object):
@@ -237,6 +238,12 @@ class BaseWaiter(OriginWaiter):
         :param raise_err: 等待失败时是否报错，为None时根据Settings设置
         :return: 是否等待成功
         """
+
+        # avoid waiting for elements if driver was quit
+        driver_ref: Driver = self._driver if isinstance(self._driver, Driver) else self._driver._driver
+        if driver_ref is None or driver_ref._stopped.is_set():
+            return
+
         if timeout != 0:
             if timeout is None or timeout is True:
                 timeout = self._driver.timeout
